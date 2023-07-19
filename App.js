@@ -21,9 +21,10 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAppOptions, setShowAppOptions] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [pickedEmoji, setPickedEmoji] = useState(null);
+  // const [pickedEmoji, setPickedEmoji] = useState(null);
 
   // start building an array of emojis before going to screenshot part of the project
+  const [emojiArray, setEmojiArray] = useState([]);
 
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -37,6 +38,10 @@ export default function App() {
     } else {
       alert("you did not select any image");
     }
+  };
+
+  const setPickedEmoji = (newEmoji) => {
+    setEmojiArray([...emojiArray, newEmoji]);
   };
 
   const onAddSticker = () => {
@@ -62,9 +67,12 @@ export default function App() {
             placeholderImageSource={placeholderImage}
             selectedImage={selectedImage}
           />
-          {pickedEmoji !== null ? (
-            <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />
-          ) : null}
+          {emojiArray.map((emoji, index) => {
+            return (
+              <EmojiSticker key={index} imageSize={40} stickerSource={emoji} />
+            );
+          })}
+          {/* <EmojiSticker imageSize={40} stickerSource={pickedEmoji} /> */}
         </View>
         <View className="basis-1/4 items-center justify-center overflow-hidden">
           {showAppOptions ? (
