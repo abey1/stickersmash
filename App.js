@@ -11,9 +11,11 @@ import {
   EmojiSticker,
 } from "./components";
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MaterialIcons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as MediaLibrary from "expo-media-library";
+import { captureRef } from "react-native-view-shot";
 
 const placeholderImage = require("./assets/images/background-image.png");
 
@@ -21,7 +23,13 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAppOptions, setShowAppOptions] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  // const [pickedEmoji, setPickedEmoji] = useState(null);
+  const [status, requestPermission] = MediaLibrary.usePermissions();
+
+  if (status === null) {
+    requestPermission();
+  }
+
+  const imageRef = useRef();
 
   // start building an array of emojis before going to screenshot part of the project
   const [emojiArray, setEmojiArray] = useState([]);
@@ -58,21 +66,46 @@ export default function App() {
 
   const onCloseAppOption = () => {
     setShowAppOptions(false);
+    setEmojiArray([]);
+  };
+
+  const onSaveImageAsync = async () => {
+    try {
+      const localUri = await captureRef(imageRef, {
+        quality: 1,
+      });
+
+      await MediaLibrary.saveToLibraryAsync(localUri);
+      if (localUri) {
+        alert("saved");
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
   return (
     <GestureHandlerRootView className="bg-darkBg flex-1 items-center justify-center">
       <SafeAreaView className="flex-1 w-full px-4">
-        <View className="flex-1 pt-2 w-full">
-          <ImageViewer
-            placeholderImageSource={placeholderImage}
-            selectedImage={selectedImage}
-          />
-          {emojiArray.map((emoji, index) => {
-            return (
-              <EmojiSticker key={index} imageSize={40} stickerSource={emoji} />
-            );
-          })}
-          {/* <EmojiSticker imageSize={40} stickerSource={pickedEmoji} /> */}
+        <View
+          className="flex-1 h-full w-full"
+          ref={imageRef}
+          collapsable={false}
+        >
+          <View className="flex-1 pt-2 w-full">
+            <ImageViewer
+              placeholderImageSource={placeholderImage}
+              selectedImage={selectedImage}
+            />
+            {emojiArray.map((emoji, index) => {
+              return (
+                <EmojiSticker
+                  key={index}
+                  imageSize={40}
+                  stickerSource={emoji}
+                />
+              );
+            })}
+          </View>
         </View>
         <View className="basis-1/4 items-center justify-center overflow-hidden">
           {showAppOptions ? (
@@ -95,6 +128,7 @@ export default function App() {
                     color="white"
                   />
                 }
+                onPress={onSaveImageAsync}
               />
             </View>
           ) : (
